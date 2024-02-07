@@ -74,13 +74,13 @@ func (t *Translator) ProcessSecurityPolicies(securityPolicies []*egv1a1.Security
 	for _, policy := range securityPolicies {
 		if policy.Spec.TargetRef.Kind != KindGateway {
 			policy := policy.DeepCopy()
-			res = append(res, policy)
 
 			// Negative statuses have already been assigned so its safe to skip
 			route := resolveSecurityPolicyRouteTargetRef(policy, routeMap)
 			if route == nil {
 				continue
 			}
+			res = append(res, policy)
 
 			err := t.translateSecurityPolicyForRoute(policy, route, resources, xdsIR)
 			if err != nil {
@@ -100,13 +100,13 @@ func (t *Translator) ProcessSecurityPolicies(securityPolicies []*egv1a1.Security
 	for _, policy := range securityPolicies {
 		if policy.Spec.TargetRef.Kind == KindGateway {
 			policy := policy.DeepCopy()
-			res = append(res, policy)
 
 			// Negative statuses have already been assigned so its safe to skip
 			gateway := resolveSecurityPolicyGatewayTargetRef(policy, gatewayMap)
 			if gateway == nil {
 				continue
 			}
+			res = append(res, policy)
 
 			err := t.translateSecurityPolicyForGateway(policy, gateway, resources, xdsIR)
 			if err != nil {
