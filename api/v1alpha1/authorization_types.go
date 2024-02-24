@@ -20,7 +20,7 @@ type Authorization struct {
 // Rule defines the single authorization rule.
 type Rule struct {
 	// ClientSelectors contains the client selector configuration.
-	// All selectors are ANDd together and only if all selector are valid
+	// All selectors are and together and only if all selector are valid
 	// the Action is performed.
 	//
 	// +kubebuilder:validation:MinItems=1

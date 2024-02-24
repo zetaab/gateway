@@ -66,7 +66,7 @@ spec:
                           type: string
                         clientSelector:
                           description: ClientSelectors contains the client selector
-                            configuration. All selectors are ANDd together and only
+                            configuration. All selectors are and together and only
                             if all selector are valid the Action is performed.
                           items:
                             description: ClientSelector contains the client selector
