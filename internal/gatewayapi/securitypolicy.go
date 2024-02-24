@@ -264,12 +264,13 @@ func (t *Translator) translateSecurityPolicyForRoute(
 	resources *Resources, xdsIR XdsIRMap) error {
 	// Build IR
 	var (
-		cors      *ir.CORS
-		jwt       *ir.JWT
-		oidc      *ir.OIDC
-		basicAuth *ir.BasicAuth
-		extAuth   *ir.ExtAuth
-		err, errs error
+		cors          *ir.CORS
+		jwt           *ir.JWT
+		oidc          *ir.OIDC
+		basicAuth     *ir.BasicAuth
+		extAuth       *ir.ExtAuth
+		authorization *ir.Authorization
+		err, errs     error
 	)
 
 	if policy.Spec.CORS != nil {
@@ -296,6 +297,10 @@ func (t *Translator) translateSecurityPolicyForRoute(
 		if extAuth, err = t.buildExtAuth(policy, resources); err != nil {
 			errs = errors.Join(errs, err)
 		}
+	}
+
+	if policy.Spec.Authorization != nil {
+		authorization = t.buildAuthorization(policy.Spec.Authorization)
 	}
 
 	// Apply IR to all relevant routes
@@ -314,6 +319,7 @@ func (t *Translator) translateSecurityPolicyForRoute(
 					r.OIDC = oidc
 					r.BasicAuth = basicAuth
 					r.ExtAuth = extAuth
+					r.Authorization = authorization
 				}
 			}
 		}
@@ -326,12 +332,13 @@ func (t *Translator) translateSecurityPolicyForGateway(
 	resources *Resources, xdsIR XdsIRMap) error {
 	// Build IR
 	var (
-		cors      *ir.CORS
-		jwt       *ir.JWT
-		oidc      *ir.OIDC
-		basicAuth *ir.BasicAuth
-		extAuth   *ir.ExtAuth
-		err, errs error
+		cors          *ir.CORS
+		jwt           *ir.JWT
+		oidc          *ir.OIDC
+		basicAuth     *ir.BasicAuth
+		extAuth       *ir.ExtAuth
+		authorization *ir.Authorization
+		err, errs     error
 	)
 
 	if policy.Spec.CORS != nil {
@@ -358,6 +365,10 @@ func (t *Translator) translateSecurityPolicyForGateway(
 		if extAuth, err = t.buildExtAuth(policy, resources); err != nil {
 			errs = errors.Join(errs, err)
 		}
+	}
+
+	if policy.Spec.Authorization != nil {
+		authorization = t.buildAuthorization(policy.Spec.Authorization)
 	}
 
 	// Apply IR to all the routes within the specific Gateway
@@ -387,6 +398,9 @@ func (t *Translator) translateSecurityPolicyForGateway(
 			}
 			if r.ExtAuth == nil {
 				r.ExtAuth = extAuth
+			}
+			if r.Authorization == nil {
+				r.Authorization = authorization
 			}
 		}
 	}
@@ -718,6 +732,27 @@ func (t *Translator) buildExtAuth(
 		}
 	}
 	return extAuth, nil
+}
+
+func (t *Translator) buildAuthorization(authorization *egv1a1.Authorization) *ir.Authorization {
+	var out *ir.Authorization
+	for _, rule := range authorization.Rules {
+		if out == nil {
+			out = &ir.Authorization{}
+		}
+		irRule := &ir.Rule{
+			Action: ir.RuleActionType(rule.Action),
+		}
+		for _, selector := range rule.ClientSelectors {
+			irRule.ClientSelectors = append(irRule.ClientSelectors,
+				ir.ClientSelector{
+					ClientCIDRs: selector.ClientCIDRs,
+				},
+			)
+		}
+		out.Rules = append(out.Rules, irRule)
+	}
+	return out
 }
 
 // TODO: zhaohuabing combine this function with the one in the route translator

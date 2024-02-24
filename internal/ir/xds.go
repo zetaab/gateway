@@ -448,6 +448,8 @@ type HTTPRoute struct {
 	CORS *CORS `json:"cors,omitempty" yaml:"cors,omitempty"`
 	// JWT defines the schema for authenticating HTTP requests using JSON Web Tokens (JWT).
 	JWT *JWT `json:"jwt,omitempty" yaml:"jwt,omitempty"`
+	// Authorization defines the authorization configuration.
+	Authorization *Authorization `json:"authorization,omitempty" yaml:"authorization,omitempty"`
 	// OIDC defines the schema for authenticating HTTP requests using OpenID Connect (OIDC).
 	OIDC *OIDC `json:"oidc,omitempty" yaml:"oidc,omitempty"`
 	// Proxy Protocol Settings
@@ -589,6 +591,55 @@ type ExtAuth struct {
 	// +optional
 	HeadersToExtAuth []string `json:"headersToExtAuth,omitempty"`
 }
+
+// Authorization defines the authorization configuration.
+//
+// +k8s:deepcopy-gen=true
+type Authorization struct {
+	// Rules contains all the authorization rules.
+
+	// If rules contains at least one Allow rule and none of them
+	// matches the action for the request is deny.
+	// If rules contains at least one Deny rule and none of them
+	// matches the action for the request is allow.
+	Rules []*Rule `json:"rules,omitempty"`
+}
+
+// Rule defines the single authorization rule.
+//
+// +k8s:deepcopy-gen=true
+type Rule struct {
+	// ClientSelectors contains the client selector configuration.
+	// All selectors are and together and only if all selector are valid
+	// the Action is performed.
+	ClientSelectors []ClientSelector `json:"clientSelector,omitempty"`
+
+	// Action defines the action to be taken if the rule matches.
+	Action RuleActionType `json:"action"`
+}
+
+// ClientSelector contains the client selector configuration.
+//
+// +k8s:deepcopy-gen=true
+type ClientSelector struct {
+	// ClientCIDRs is a list of CIDRs.
+	// Valid examples are "192.168.1.0/24" or "2001:db8::/64"
+	//
+	// +optional
+	ClientCIDRs []string `json:"clientCIDR,omitempty"`
+}
+
+// RuleActionType specifies the types of authorization rule action.
+type RuleActionType string
+
+const (
+	// AllowRuleType is the action to allow the request.
+	AllowRuleType RuleActionType = "Allow"
+	// DenyRuleType is the action to deny the request.
+	DenyRuleType RuleActionType = "Deny"
+	// LogRuleType is the action to log the request.
+	LogRuleType RuleActionType = "Log"
+)
 
 // HTTPExtAuthService defines the HTTP External Authorization service
 // +k8s:deepcopy-gen=true

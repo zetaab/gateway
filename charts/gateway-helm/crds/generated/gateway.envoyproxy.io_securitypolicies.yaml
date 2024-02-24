@@ -60,9 +60,9 @@ spec:
                           description: Action defines the action to be taken if the
                             rule matches.
                           enum:
-                          - AllowRuleType
-                          - DenyRuleType
-                          - LogRuleType
+                          - Allow
+                          - Deny
+                          - Log
                           type: string
                         clientSelector:
                           description: ClientSelectors contains the client selector
